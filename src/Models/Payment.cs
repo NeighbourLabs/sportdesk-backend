@@ -1,8 +1,7 @@
 namespace sportdesk_backend.Models;
 
-public class Payment : EntityBase
+public sealed record Payment : EntityBase
 {
-    public required Session Session { get; set; }
-    public required AthleteEnrollments AthleteEnrollment { get; set; }
-    public required DateOnly ExpiresAt { get; set; }
+    public required AthleteEnrollment AthleteEnrollment { get; init; }
+    public required int Months { get; init; }
 }

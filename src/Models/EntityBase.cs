@@ -1,6 +1,6 @@
 namespace sportdesk_backend.Models;
 
-public abstract class EntityBase
+public abstract record EntityBase
 {
     public required Guid Id { get; set; }
     public DateTime CreatedAt { get; set; }

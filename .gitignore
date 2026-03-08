@@ -1,0 +1,14 @@
+obj/
+# Rider / JetBrains
+.idea/
+*.iml
+
+# Build folders
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+
+out/
