@@ -2,6 +2,6 @@ namespace sportdesk_backend.Models;
 
 public sealed record Enrollment : EntityBase
 {
-    public required CoachSport CoachSport { get; init; }
-    public required decimal Fee { get; init; }
+    public CoachSport CoachSport { get; init; } = new CoachSport();
+    public decimal Fee { get; init; } 
 }

@@ -1,14 +1,3 @@
-CREATE
-USER sportdesk_admin WITH PASSWORD 'shum_pass_i_fort';
-
-CREATE
-DATABASE sportdesk_db
-OWNER sportdesk_admin
-ENCODING 'UTF8';
-
-\c
-sportdesk_db
-
 CREATE TABLE tenants
 (
     id   UUID PRIMARY KEY,
@@ -21,6 +10,7 @@ CREATE TABLE users
     name       TEXT                                               NOT NULL,
     surname    TEXT                                               NOT NULL,
     email      TEXT UNIQUE                                        NOT NULL,
+    password   TEXT                                               NOT NULL,
     tel        TEXT,
     role       TEXT                                               NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -83,8 +73,8 @@ CREATE TABLE athlete_enrollments
     enrollment_id UUID    NOT NULL,
     athlete_id    UUID    NOT NULL,
     months        INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     tenant_id     UUID    NOT NULL,
     CONSTRAINT fk_athlete_enrollments_enrollment FOREIGN KEY (enrollment_id) REFERENCES enrollments (id) ON DELETE CASCADE,
     CONSTRAINT fk_athlete_enrollments_athlete FOREIGN KEY (athlete_id) REFERENCES athletes (id) ON DELETE CASCADE,

@@ -4,8 +4,8 @@ services:
     container_name: sportdesk_postgres
     restart: always
     environment:
-      POSTGRES_USER: sportdesk
-      POSTGRES_PASSWORD: shumsekret
+      POSTGRES_USER: sportdesk_admin
+      POSTGRES_PASSWORD: shum_pass_i_fort
       POSTGRES_DB: sportdesk_db
     ports:
       - "5432:5432"

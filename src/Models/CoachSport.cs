@@ -4,6 +4,6 @@ namespace sportdesk_backend.Models;
 
 public sealed record CoachSport : EntityBase
 {
-    public required User Coach { get; init; }
-    public required Sport Sport { get; init; }
+    public User Coach { get; init; } = new User();
+    public Sport Sport { get; init; } = new Sport();
 }
