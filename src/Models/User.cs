@@ -9,5 +9,5 @@ public sealed record User : EntityBase
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string Tel { get; set; } = string.Empty;
-    public required UserRole Role { get; set; }
+    public UserRole? Role { get; set; }   
 }

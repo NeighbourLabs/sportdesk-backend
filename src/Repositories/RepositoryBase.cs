@@ -1,27 +1,27 @@
 using sportdesk_backend.Infra;
 using Microsoft.EntityFrameworkCore;
+using sportdesk_backend.Models;
 
 namespace sportdesk_backend.Repositories;
 
-public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
+public abstract class RepositoryBase<T>(AppDbContext context) 
+    : IRepositoryBase<T> where T : EntityBase
 {
-    protected readonly AppDbContext _context;
-    protected readonly DbSet<T> _dbSet;
+    protected readonly AppDbContext _context = context;
+    protected readonly DbSet<T> _dbSet = context.Set<T>();
 
-    protected RepositoryBase(AppDbContext context)
+    public virtual async Task<T?> GetByIdAsync(Guid id, Guid tenantId)
     {
-        _context = context;
-        _dbSet = _context.Set<T>();
+        return await _dbSet
+            .Where(e => e.Tenant.Id == tenantId)
+            .FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    public virtual async Task<T?> GetByIdAsync(Guid id)
+    public virtual async Task<IEnumerable<T>> GetAllAsync(Guid tenantId)
     {
-        return await _dbSet.FindAsync(id);
-    }
-
-    public virtual async Task<IEnumerable<T>> GetAllAsync()
-    {
-        return await _dbSet.ToListAsync();
+        return await _dbSet
+            .Where(e => e.Tenant.Id == tenantId)
+            .ToListAsync();
     }
 
     public virtual async Task<T> CreateAsync(T entity)
@@ -31,16 +31,21 @@ public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
         return entity;
     }
 
-    public virtual async Task<T> UpdateAsync(T entity)
+    public virtual async Task<T> UpdateAsync(T entity, Guid tenantId)
     {
+        if (entity.Tenant.Id != tenantId)
+        {
+            throw new UnauthorizedAccessException();
+        }
+
         _dbSet.Update(entity);
         await SaveChangesAsync();
         return entity;
     }
 
-    public virtual async Task DeleteAsync(Guid id)
+    public virtual async Task DeleteAsync(Guid id, Guid tenantId)
     {
-        var entity = await GetByIdAsync(id);
+        var entity = await GetByIdAsync(id, tenantId);
         if (entity != null)
         {
             _dbSet.Remove(entity);
@@ -52,4 +57,4 @@ public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
     {
         await _context.SaveChangesAsync();
     }
-}
+}   

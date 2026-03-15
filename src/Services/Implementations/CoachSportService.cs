@@ -5,5 +5,5 @@ using sportdesk_backend.Services.Interfaces;
 
 namespace sportdesk_backend.Services.Implementations;
 
-public class CoachSportsService(ICoachSportsRepository repository)
-    : ServiceBase<CoachSport, ICoachSportsRepository>(repository), ICoachSportsService;
+public class CoachSportService(ICoachSportsRepository repository)
+    : ServiceBase<CoachSport, ICoachSportsRepository>(repository), ICoachSportService;
