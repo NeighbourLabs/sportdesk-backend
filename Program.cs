@@ -11,6 +11,13 @@ using sportdesk_backend.Services.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+});
 
 builder.Services.AddScoped<IAthleteEnrollmentRepository, AthleteEnrollmentRepository>();
 builder.Services.AddScoped<IAthleteRepository, AthleteRepository>();
@@ -42,9 +49,14 @@ builder.Services.AddScoped<TenantMapper>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
 
 var app = builder.Build();
+
+app.UseCors();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.MapGet("/health", () => Results.Ok());
 

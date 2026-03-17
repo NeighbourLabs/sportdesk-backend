@@ -23,8 +23,13 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.ApplyConfigurationsFromAssembly(
-            typeof(AppDbContext).Assembly
-        );
+        modelBuilder.Entity<Athlete>().ToTable("athletes");
+        modelBuilder.Entity<AthleteEnrollment>().ToTable("athlete_enrollments");
+        modelBuilder.Entity<CoachSport>().ToTable("coach_sports");
+        modelBuilder.Entity<Enrollment>().ToTable("enrollments");
+        modelBuilder.Entity<Payment>().ToTable("payments");
+        modelBuilder.Entity<Sport>().ToTable("sports");
+        modelBuilder.Entity<Tenant>().ToTable("tenants");
+        modelBuilder.Entity<User>().ToTable("users");
     }
 }
