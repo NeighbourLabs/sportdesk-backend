@@ -2,6 +2,7 @@ namespace sportdesk_backend.Models;
 
 public sealed record Payment : EntityBase
 {
-    public AthleteEnrollment AthleteEnrollment { get; init; } = new AthleteEnrollment();
+    public Guid AthleteEnrollmentId { get; init; }
+    public AthleteEnrollment AthleteEnrollment { get; init; } = null!;
     public int Months { get; init; }
 }
