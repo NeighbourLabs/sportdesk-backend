@@ -4,7 +4,7 @@ using sportdesk_backend.Models;
 
 namespace sportdesk_backend.Repositories;
 
-public abstract class RepositoryBase<T>(AppDbContext context) 
+public abstract class RepositoryBase<T>(AppDbContext context)
     : IRepositoryBase<T> where T : EntityBase
 {
     protected readonly AppDbContext _context = context;
@@ -13,14 +13,16 @@ public abstract class RepositoryBase<T>(AppDbContext context)
     public virtual async Task<T?> GetByIdAsync(Guid id, Guid tenantId)
     {
         return await _dbSet
-            .Where(e => e.Tenant.Id == tenantId)
+            .Include(e => e.Tenant)
+            .Where(e => e.TenantId == tenantId)
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(Guid tenantId)
     {
         return await _dbSet
-            .Where(e => e.Tenant.Id == tenantId)
+            .Include(e => e.Tenant)
+            .Where(e => e.TenantId == tenantId)
             .ToListAsync();
     }
 
@@ -33,7 +35,7 @@ public abstract class RepositoryBase<T>(AppDbContext context)
 
     public virtual async Task<T> UpdateAsync(T entity, Guid tenantId)
     {
-        if (entity.Tenant.Id != tenantId)
+        if (entity.TenantId != tenantId)
         {
             throw new UnauthorizedAccessException();
         }
