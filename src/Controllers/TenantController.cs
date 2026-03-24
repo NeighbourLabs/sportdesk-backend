@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using sportdesk_backend.Dtos;
 using sportdesk_backend.Mappers;
@@ -6,6 +7,7 @@ using sportdesk_backend.Services.Interfaces;
 namespace sportdesk_backend.Controllers;
 
 [ApiController]
+[Authorize(Roles = "SUPER_ADMIN")]
 [Route("api/[controller]")]
 public sealed class TenantController(ITenantService service, TenantMapper mapper) : ControllerBase
 {

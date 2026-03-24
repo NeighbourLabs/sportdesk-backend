@@ -7,9 +7,9 @@ namespace sportdesk_backend.Services.Implementations;
 
 public class TenantService : ITenantService
 {
-    private readonly TenantRepository Repository;
+    private readonly ITenantRepository Repository;
 
-    public TenantService(TenantRepository repository)
+    public TenantService(ITenantRepository repository)
     {
         Repository = repository;
     }
