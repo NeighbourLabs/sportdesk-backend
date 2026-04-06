@@ -52,6 +52,8 @@ builder.Services.AddCors(options =>
 // JWT configuration
 var jwtSection = builder.Configuration.GetSection("Jwt");
 builder.Services.Configure<JwtSettings>(jwtSection);
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+builder.Services.Configure<FrontendSettings>(builder.Configuration.GetSection("Frontend"));
 
 var jwtSettings = jwtSection.Get<JwtSettings>()!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -92,6 +94,7 @@ builder.Services.AddScoped<ISportService, SportService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Mappers
 builder.Services.AddScoped<IMapperBase<Athlete, AthleteDto>, AthleteMapper>();

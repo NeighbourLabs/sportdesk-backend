@@ -9,6 +9,24 @@ namespace sportdesk_backend.Controllers;
 [Route("api/[controller]")]
 public class AuthController(IAuthService authService) : ControllerBase
 {
+    [HttpPost("invite")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Invite(InviteRequest request)
+    {
+        await authService.InviteAsync(request);
+        return NoContent();
+    }
+
+    [HttpGet("validate-invite/{token}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ValidateInvite(string token)
+    {
+        var isValid = await authService.ValidateInviteAsync(token);
+        if (!isValid)
+            return BadRequest(new { message = "Invalid or expired invitation." });
+        return Ok();
+    }
+
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)

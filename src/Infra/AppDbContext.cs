@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<Tenant> Tenants { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+    public DbSet<RegistrationInvitation> RegistrationInvitations { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Tenant>().ToTable("tenants");
         modelBuilder.Entity<User>().ToTable("users");
         modelBuilder.Entity<RefreshToken>().ToTable("refresh_tokens");
+        modelBuilder.Entity<RegistrationInvitation>().ToTable("registration_invitations");
 
         // Tenant relationships
         modelBuilder.Entity<Athlete>()
@@ -55,6 +57,8 @@ public class AppDbContext : DbContext
             .HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId);
         modelBuilder.Entity<RefreshToken>()
             .HasIndex(r => r.Token).IsUnique();
+        modelBuilder.Entity<RegistrationInvitation>()
+            .HasIndex(i => i.Token).IsUnique();
 
         // Entity relationships
         modelBuilder.Entity<CoachSport>()

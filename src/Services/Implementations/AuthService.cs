@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using sportdesk_backend.Auth;
 using sportdesk_backend.Dtos.Auth;
+using sportdesk_backend.Enums;
 using sportdesk_backend.Infra;
 using sportdesk_backend.Models;
 using sportdesk_backend.Repositories.Interfaces;
@@ -16,10 +17,14 @@ namespace sportdesk_backend.Services.Implementations;
 
 public class AuthService(
     IUserRepository userRepository,
+    ITenantRepository tenantRepository,
+    IEmailService emailService,
     AppDbContext dbContext,
-    IOptions<JwtSettings> jwtOptions) : IAuthService
+    IOptions<JwtSettings> jwtOptions,
+    IOptions<FrontendSettings> frontendOptions) : IAuthService
 {
     private readonly JwtSettings _jwt = jwtOptions.Value;
+    private readonly FrontendSettings _frontend = frontendOptions.Value;
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
@@ -32,27 +37,72 @@ public class AuthService(
         return await GenerateAuthResponseAsync(user);
     }
 
+    public async Task InviteAsync(InviteRequest request)
+    {
+        var token = GenerateUrlSafeToken();
+
+        var invitation = new RegistrationInvitation
+        {
+            Id = Guid.NewGuid(),
+            Token = token,
+            Email = request.Email,
+            ExpiresAt = DateTime.UtcNow.AddHours(24),
+            IsUsed = false,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.RegistrationInvitations.Add(invitation);
+        await dbContext.SaveChangesAsync();
+
+        var registrationLink = $"{_frontend.BaseUrl}/register/{token}";
+        await emailService.SendInvitationAsync(request.Email, registrationLink);
+    }
+
+    public async Task<bool> ValidateInviteAsync(string token)
+    {
+        var invitation = await dbContext.RegistrationInvitations
+            .FirstOrDefaultAsync(i => i.Token == token);
+
+        return invitation != null && !invitation.IsUsed && invitation.ExpiresAt > DateTime.UtcNow;
+    }
+
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
     {
-        var existing = await userRepository.GetByEmailAsync(request.Email, request.TenantId);
-        if (existing != null)
-            throw new InvalidOperationException("A user with this email already exists.");
+        var invitation = await dbContext.RegistrationInvitations
+            .FirstOrDefaultAsync(i => i.Token == request.Token)
+            ?? throw new InvalidOperationException("Invalid or expired invitation.");
+
+        if (invitation.IsUsed || invitation.ExpiresAt <= DateTime.UtcNow)
+            throw new InvalidOperationException("Invalid or expired invitation.");
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+
+        var tenant = new Tenant
+        {
+            Id = Guid.NewGuid(),
+            Name = request.TenantName
+        };
+        await tenantRepository.CreateAsync(tenant);
 
         var user = new User
         {
             Id = Guid.NewGuid(),
             Name = request.Name,
             Surname = request.Surname,
-            Email = request.Email,
+            Email = invitation.Email,
             Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Tel = request.Tel,
-            Role = request.Role,
-            TenantId = request.TenantId,
+            Role = UserRole.OWNER,
+            TenantId = tenant.Id,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-
         await userRepository.CreateAsync(user);
+
+        invitation.IsUsed = true;
+        await dbContext.SaveChangesAsync();
+
+        await transaction.CommitAsync();
 
         return await GenerateAuthResponseAsync(user);
     }
@@ -144,5 +194,13 @@ public class AuthService(
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomBytes);
         return Convert.ToBase64String(randomBytes);
+    }
+
+    private static string GenerateUrlSafeToken()
+    {
+        var randomBytes = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomBytes);
+        return Convert.ToHexString(randomBytes).ToLowerInvariant();
     }
 }
