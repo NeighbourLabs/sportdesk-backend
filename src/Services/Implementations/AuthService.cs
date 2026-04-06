@@ -107,6 +107,48 @@ public class AuthService(
         return await GenerateAuthResponseAsync(user);
     }
 
+    public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
+    {
+        var user = await userRepository.GetByEmailAsync(request.Email, request.TenantId);
+        if (user == null)
+            return; // don't reveal whether the email exists
+
+        var token = GenerateUrlSafeToken();
+
+        var resetToken = new PasswordResetToken
+        {
+            Id = Guid.NewGuid(),
+            Token = token,
+            UserId = user.Id,
+            ExpiresAt = DateTime.UtcNow.AddHours(1),
+            IsUsed = false,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.PasswordResetTokens.Add(resetToken);
+        await dbContext.SaveChangesAsync();
+
+        var resetLink = $"{_frontend.BaseUrl}/reset-password/{token}";
+        await emailService.SendPasswordResetAsync(request.Email, resetLink);
+    }
+
+    public async Task ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var resetToken = await dbContext.PasswordResetTokens
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.Token == request.Token)
+            ?? throw new InvalidOperationException("Invalid or expired reset token.");
+
+        if (resetToken.IsUsed || resetToken.ExpiresAt <= DateTime.UtcNow)
+            throw new InvalidOperationException("Invalid or expired reset token.");
+
+        resetToken.User.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        resetToken.User.UpdatedAt = DateTime.UtcNow;
+        resetToken.IsUsed = true;
+
+        await dbContext.SaveChangesAsync();
+    }
+
     public async Task<AuthResponse> RefreshAsync(RefreshRequest request)
     {
         var storedToken = await dbContext.RefreshTokens

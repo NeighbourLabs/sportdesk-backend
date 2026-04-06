@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<RegistrationInvitation> RegistrationInvitations { get; set; } = null!;
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +36,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>().ToTable("users");
         modelBuilder.Entity<RefreshToken>().ToTable("refresh_tokens");
         modelBuilder.Entity<RegistrationInvitation>().ToTable("registration_invitations");
+        modelBuilder.Entity<PasswordResetToken>().ToTable("password_reset_tokens");
 
         // Tenant relationships
         modelBuilder.Entity<Athlete>()
@@ -59,6 +61,10 @@ public class AppDbContext : DbContext
             .HasIndex(r => r.Token).IsUnique();
         modelBuilder.Entity<RegistrationInvitation>()
             .HasIndex(i => i.Token).IsUnique();
+        modelBuilder.Entity<PasswordResetToken>()
+            .HasOne(p => p.User).WithMany().HasForeignKey(p => p.UserId);
+        modelBuilder.Entity<PasswordResetToken>()
+            .HasIndex(p => p.Token).IsUnique();
 
         // Entity relationships
         modelBuilder.Entity<CoachSport>()

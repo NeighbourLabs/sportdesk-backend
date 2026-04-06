@@ -72,6 +72,29 @@ public class AuthController(IAuthService authService) : ControllerBase
         }
     }
 
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
+    {
+        await authService.ForgotPasswordAsync(request);
+        return NoContent();
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
+    {
+        try
+        {
+            await authService.ResetPasswordAsync(request);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> Logout(RefreshRequest request)

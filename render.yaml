@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: sportdesk-backend
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: sportdesk-db
+          property: connectionString
+
+databases:
+  - name: sportdesk-db
+    databaseName: sportdesk_db
+    user: sportdesk_admin
+    plan: free

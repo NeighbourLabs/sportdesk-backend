@@ -10,4 +10,6 @@ public interface IAuthService
     Task LogoutAsync(string refreshToken);
     Task InviteAsync(InviteRequest request);
     Task<bool> ValidateInviteAsync(string token);
+    Task ForgotPasswordAsync(ForgotPasswordRequest request);
+    Task ResetPasswordAsync(ResetPasswordRequest request);
 }

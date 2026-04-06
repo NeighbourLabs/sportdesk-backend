@@ -71,6 +71,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
             RoleClaimType = "role"
         };
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsync("{\"message\":\"Unauthorized.\"}");
+            }
+        };
     });
 builder.Services.AddAuthorization();
 
@@ -106,7 +116,16 @@ builder.Services.AddScoped<IMapperBase<Sport, SportDto>, SportMapper>();
 builder.Services.AddScoped<IMapperBase<User, UserDto>, UserMapper>();
 builder.Services.AddScoped<TenantMapper>();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+
+// Render provides a postgres:// URL; convert it to the key-value format Npgsql expects
+if (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://"))
+{
+    var uri = new Uri(connectionString);
+    var userInfo = uri.UserInfo.Split(':');
+    var port = uri.Port > 0 ? uri.Port : 5432;
+    connectionString = $"Host={uri.Host};Port={port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={Uri.UnescapeDataString(userInfo[1])};SSL Mode=Require;Trust Server Certificate=true";
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
